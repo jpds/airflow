@@ -15,40 +15,41 @@
 #  specific language governing permissions and limitations      *
 #  under the License.                                           *
 
-FROM ubuntu:16.04
+FROM alpine:3.7
 
-# install deps
-RUN apt-get update -y && apt-get install -y \
-        wget \
-        python-dev \
-        python-pip \
-        libczmq-dev \
-        libcurlpp-dev \
-        curl \
-        libssl-dev \
-        git \
-        inetutils-telnet \
-        bind9utils \
-        zip \
-        unzip \
-    && apt-get clean
-
-
-RUN pip install --upgrade pip
-
-# Since we install vanilla Airflow, we also want to have support for Postgres and Kubernetes
-RUN pip install -U setuptools && \
-    pip install kubernetes && \
-    pip install cryptography && \
-    pip install psycopg2-binary==2.7.4  # I had issues with older versions of psycopg2, just a warning
-
-# install airflow
+COPY requirements.txt /tmp/requirements.txt
 COPY airflow.tar.gz /tmp/airflow.tar.gz
-RUN pip install /tmp/airflow.tar.gz
-
-COPY airflow-init.sh /tmp/airflow-init.sh
-
 COPY bootstrap.sh /bootstrap.sh
-RUN chmod +x /bootstrap.sh
+
+RUN apk add --no-cache --virtual build-deps \
+        python3-dev \
+        libressl-dev \
+        libffi-dev \
+        build-base \
+        postgresql-dev \
+        libxml2-dev \
+        libxslt-dev \
+        linux-headers && \
+    apk add --no-cache \
+        bash \
+        py3-requests \
+        curl \
+        rsync \
+	wget \
+        netcat-openbsd && \
+    adduser -D -s /bin/bash -h /home/airflow/ airflow && \
+    pip3 install -U setuptools && \
+    pip3 install -U pip && \
+    pip3 install -r /tmp/requirements.txt && \
+    pip3 install kubernetes && \
+    pip3 install cryptography && \
+    pip3 install psycopg2 && \
+    pip3 install /tmp/airflow.tar.gz && \
+    apk del --no-cache build-deps && \
+    apk add --no-cache libpq && \
+    rm -f /tmp/* && \
+    chmod +x /bootstrap.sh
+
+USER airflow
 
 ENTRYPOINT ["/bootstrap.sh"]
