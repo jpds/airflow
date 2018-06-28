@@ -17,7 +17,6 @@
 
 FROM alpine:3.7
 
-COPY requirements.txt /tmp/requirements.txt
 COPY airflow.tar.gz /tmp/airflow.tar.gz
 COPY bootstrap.sh /bootstrap.sh
 
@@ -38,9 +37,8 @@ RUN apk add --no-cache --virtual build-deps \
 	wget \
         netcat-openbsd && \
     adduser -D -s /bin/bash -h /home/airflow/ airflow && \
-    pip3 install -U setuptools && \
     pip3 install -U pip && \
-    pip3 install -r /tmp/requirements.txt && \
+    pip3 install -U setuptools && \
     pip3 install kubernetes && \
     pip3 install cryptography && \
     pip3 install psycopg2 && \
