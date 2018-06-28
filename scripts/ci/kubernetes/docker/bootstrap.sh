@@ -21,10 +21,7 @@
 
 if [ "$1" = "webserver" ]
 then
-	exec airflow webserver
+	airflow upgradedb
 fi
 
-if [ "$1" = "scheduler" ]
-then
-	exec airflow scheduler
-fi
+exec airflow "$@"
